@@ -137,14 +137,8 @@ var compare = function (rootEntry1, rootEntry2, level, relativePath, options, st
             }
             i1++;
             i2++;
-            if(!options.skipSubdirs){
-                if (type1 === 'directory' && type2 === 'directory') {
-                    compare(entry1, entry2, level + 1, relativePath + PATH_SEP + entry1.name, options, statistics, diffSet, common.cloneSymlinkCache(symlinkCache));
-                } else if (type1 === 'directory') {
-                    compare(entry1, undefined, level + 1, relativePath + PATH_SEP + entry1.name, options, statistics, diffSet, common.cloneSymlinkCache(symlinkCache));
-                } else if (type2 === 'directory') {
-                    compare(undefined, entry2, level + 1, relativePath + PATH_SEP + entry2.name, options, statistics, diffSet, common.cloneSymlinkCache(symlinkCache));
-                }
+            if(!options.skipSubdirs && type1 === 'directory'){
+                compare(entry1, entry2, level + 1, relativePath + PATH_SEP + entry1.name, options, statistics, diffSet, common.cloneSymlinkCache(symlinkCache));
             }
         } else if (cmp < 0) {
             // Right missing

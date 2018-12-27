@@ -136,6 +136,14 @@ var getTests = function(testDirPath){
                  commandLineOptions: '',
                  exitCode: 1,
              },
+             {
+                 name: 'test001_9', path1: 'd1/a1.txt', path2: 'd2/a1.txt',
+                 description: 'should compare two files',
+                 options: {compareSize: true,},
+                 displayOptions: {nocolors: true},
+                 commandLineOptions: '',
+                 exitCode: 0,
+             },
 
              ////////////////////////////////////////////////////
              // Filters                                        //

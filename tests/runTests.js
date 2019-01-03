@@ -83,7 +83,9 @@ function passed (value, type) {
  * * onlyCommandLine - Test is run only on command line.
  * * skipStatisticsCheck - Do not call checkStatistics() after each library test.
  * * onlySync - only apply for synchronous compare
+ * * onlyAsync - only apply for synchronous compare
  * * nodeVersionSupport - limit test to specific node versions; ie. '>=2.5.0'
+ * * runAsync - execute hand-written async test
  */
 var getTests = function(testDirPath){
     var res = [
@@ -704,6 +706,20 @@ var getTests = function(testDirPath){
                  withRelativePath: true,
                  print: function(res, writer, program){printRelativePathResult(res, testDirPath, writer)}
              },
+             //////////////////////////////////////////////////////////////
+             // Async exception handling                                 //
+             //////////////////////////////////////////////////////////////
+             {
+                 name: 'test013_0',
+                 description: 'should propagate async exception',
+                 onlyAsync: true,
+                 runAsync: function(){
+                     return dircompare.compare(testDirPath+'/d1', testDirPath+'/none', {})
+                     .then(function(res){return 'res: ' + JSON.stringify(res)}))
+                     .catch(function(error){return 'error occurred: '+ error})
+                     .then(function(error){return error.replace(testDirPath, 'PATH')})
+                 }
+             },
          ];
          return res;
 }
@@ -820,7 +836,13 @@ var testAsync = function(test, testDirPath, saveReport, showResult){
         path1 = test.path1?testDirPath + '/' + test.path1:'';
         path2 = test.path2?testDirPath + '/' + test.path2:'';
     }
-    return compareAsync(path1, path2, test.options).then(
+    var promise;
+    if(test.runAsync){
+        promise = test.runAsync();
+    } else {
+        promise = compareAsync(path1, path2, test.options)
+    }
+    return promise.then(
             function(result){
                 // PRINT DETAILS
                 var writer = new Streams.WritableStream();
@@ -940,6 +962,7 @@ function executeTests (testDirPath, singleTestName, showResult) {
         // Run sync tests
         var syncTestsPromises = [];
         tests.filter(function(test){return !test.onlyCommandLine;})
+        .filter(function(test){return !test.onlyAsync})
         .filter(function(test){return singleTestName?test.name===singleTestName:true;})
         .filter(function(test){return test.nodeVersionSupport===undefined || semver.satisfies(process.version, test.nodeVersionSupport) })
         .forEach(function(test){
@@ -954,7 +977,7 @@ function executeTests (testDirPath, singleTestName, showResult) {
         // Run async tests
         var asyncTestsPromises = [];
         getTests(testDirPath).filter(function(test){return !test.onlyCommandLine;})
-        .filter(function(test){return !test.onlySync;})
+        .filter(function(test){return !test.onlySync})
         .filter(function(test){return test.nodeVersionSupport===undefined || semver.satisfies(process.version, test.nodeVersionSupport) })
         .filter(function(test){return singleTestName?test.name===singleTestName:true;})
         .forEach(function(test){
